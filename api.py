@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -28,7 +29,8 @@ class KmdNederlandseSpoorwegenApiClient:
     ) -> dict[str, Any]:
         """Fetch departure data for a station, optionally filtered by destination and time window."""
         try:
-            departures = self._client.get_departures(
+            departures = await asyncio.to_thread(
+                self._client.get_departures,
                 station=station,
                 max_journeys=str(limit),
             )
