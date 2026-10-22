@@ -23,7 +23,12 @@ Custom Home Assistant integration for the Dutch rail departures API.
 - Station: `Utrecht Centraal`
 - Max departures: `5`
 
+## Run unit tests
+
+```bash
+python -m pytest tests/test_api.py -q
+```
+
 ## Notes
 
 This integration uses the official `ns-api` Python package.
-
