@@ -1,0 +1,14 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to KMd Nederlandse Spoorwegen",
+        "data": {
+          "username": "Username",
+          "password": "Password"
+        }
+      }
+    }
+  }
+}
+

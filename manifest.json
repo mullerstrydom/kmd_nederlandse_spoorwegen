@@ -1,0 +1,12 @@
+{
+  "domain": "kmd_nederlandse_spoorwegen",
+  "name": "KMd Nederlandse Spoorwegen",
+  "codeowners": [],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/your-user/kmd_nederlandse_spoorwegen",
+  "iot_class": "cloud_polling",
+  "requirements": [],
+  "version": "0.1.0"
+}
+
