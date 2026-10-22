@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -23,11 +23,12 @@ class TestKmdNederlandseSpoorwegenApiClient:
 
     def test_async_get_departures_normalizes_payload(self):
         """The client should return Home Assistant-friendly departure data."""
+        now = datetime.now()
         departure = SimpleNamespace(
             key="123_2026-10-22T08:15:00+00:00",
             destination="Amsterdam Centraal",
-            departure_time_planned=datetime(2026, 10, 22, 8, 15, 0),
-            departure_time_actual=datetime(2026, 10, 22, 8, 18, 0),
+            departure_time_planned=now + timedelta(minutes=20),
+            departure_time_actual=now + timedelta(minutes=18),
             departure_platform="3",
             delay=3,
             departure_status="on_time",
@@ -70,11 +71,12 @@ class TestKmdNederlandseSpoorwegenApiClient:
 
     def test_async_get_departures_skips_malformed_entries(self):
         """Malformed departure entries should be skipped instead of crashing the whole result."""
+        now = datetime.now()
         valid_departure = SimpleNamespace(
             key="123_2026-10-22T08:15:00+00:00",
             destination="Amsterdam Centraal",
-            departure_time_planned=datetime(2026, 10, 22, 8, 15, 0),
-            departure_time_actual=datetime(2026, 10, 22, 8, 18, 0),
+            departure_time_planned=now + timedelta(minutes=20),
+            departure_time_actual=now + timedelta(minutes=18),
             departure_platform="3",
             delay=3,
             departure_status="on_time",

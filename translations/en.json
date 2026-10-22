@@ -5,8 +5,10 @@
         "title": "Connect to NS API",
         "data": {
           "subscription_key": "Subscription key",
-          "station": "Station",
-          "max_departures": "Max departures"
+          "station": "Origin station",
+          "destination_station": "Destination station",
+          "max_departures": "Max departures",
+          "lookahead_hours": "Look ahead hours"
         }
       }
     }

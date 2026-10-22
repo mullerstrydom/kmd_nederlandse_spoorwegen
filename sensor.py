@@ -18,47 +18,101 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor entities from a config entry."""
     coordinator: KmdNederlandseSpoorwegenCoordinator = hass.data["kmd_nederlandse_spoorwegen"][config_entry.entry_id]
-    entities = [
-        DepartureInfoSensor(coordinator, departure)
-        for departure in coordinator.data.get("departures", [])
-    ]
-    async_add_entities(entities)
+    async_add_entities(
+        [
+            NextDepartureSensor(coordinator),
+            UpcomingDeparturesSensor(coordinator),
+        ]
+    )
 
 
-class DepartureInfoSensor(SensorEntity):
-    """Representation of a departure sensor."""
+class RouteDepartureSensorBase(SensorEntity):
+    """Base class for route-related departure sensors."""
 
     _attr_has_entity_name = True
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(self, coordinator: KmdNederlandseSpoorwegenCoordinator, departure: dict) -> None:
+    def __init__(self, coordinator: KmdNederlandseSpoorwegenCoordinator) -> None:
         self.coordinator = coordinator
-        self.departure = departure
-        self._attr_unique_id = (
-            f"{coordinator.station}_{departure.get('route', 'unknown')}_"
-            f"{departure.get('departure_time', 'unknown')}"
-        )
-        self._attr_name = f"{departure.get('route', 'Train')} {departure.get('departure_time', '')}"
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self.departure.get("status", "unknown")
-
-    @property
-    def extra_state_attributes(self):
-        """Return extra attributes for the sensor."""
-        return {
-            "destination": self.departure.get("destination"),
-            "platform": self.departure.get("platform"),
-            "delay": self.departure.get("delay"),
-            "departure_time": self.departure.get("departure_time"),
-            "actual_departure_time": self.departure.get("actual_departure_time"),
-            "train": self.departure.get("train"),
-            "cancelled": self.departure.get("cancelled"),
-        }
 
     @property
     def available(self) -> bool:
         """Return if entity is available."""
         return self.coordinator.last_update_success
+
+    @property
+    def _departures(self) -> list[dict]:
+        """Return the departure list from the coordinator."""
+        return self.coordinator.data.get("departures", [])
+
+
+class NextDepartureSensor(RouteDepartureSensorBase):
+    """Sensor that exposes the next departure time for the configured route."""
+
+    def __init__(self, coordinator: KmdNederlandseSpoorwegenCoordinator) -> None:
+        super().__init__(coordinator)
+        route_suffix = f"_{coordinator.destination_station}" if coordinator.destination_station else ""
+        self._attr_unique_id = f"{coordinator.station}{route_suffix}_next_departure"
+        self._attr_name = (
+            f"{coordinator.station} → {coordinator.destination_station} next departure"
+            if coordinator.destination_station
+            else f"{coordinator.station} next departure"
+        )
+
+    @property
+    def native_value(self):
+        """Return the next departure time."""
+        for departure in self._departures:
+            if departure.get("departure_time") is not None:
+                return departure.get("departure_time")
+        return None
+
+    @property
+    def extra_state_attributes(self):
+        """Return details for the next departure."""
+        departures = self._departures
+        next_departure = next(
+            (item for item in departures if item.get("departure_time") is not None),
+            {},
+        )
+        return {
+            "origin": self.coordinator.station,
+            "destination": self.coordinator.destination_station or next_departure.get("destination"),
+            "next_departure": next_departure,
+            "platform": next_departure.get("platform"),
+            "delay": next_departure.get("delay"),
+            "train": next_departure.get("train"),
+            "status": next_departure.get("status"),
+            "lookahead_hours": self.coordinator.lookahead_hours,
+            "route_filter": self.coordinator.destination_station,
+        }
+
+
+class UpcomingDeparturesSensor(RouteDepartureSensorBase):
+    """Sensor that exposes the list of upcoming departures for the configured route."""
+
+    def __init__(self, coordinator: KmdNederlandseSpoorwegenCoordinator) -> None:
+        super().__init__(coordinator)
+        route_suffix = f"_{coordinator.destination_station}" if coordinator.destination_station else ""
+        self._attr_unique_id = f"{coordinator.station}{route_suffix}_upcoming_departures"
+        self._attr_name = (
+            f"{coordinator.station} → {coordinator.destination_station} departures"
+            if coordinator.destination_station
+            else f"{coordinator.station} departures"
+        )
+
+    @property
+    def native_value(self):
+        """Return the number of upcoming departures."""
+        return len(self._departures)
+
+    @property
+    def extra_state_attributes(self):
+        """Return the complete list of upcoming departures."""
+        return {
+            "origin": self.coordinator.station,
+            "destination": self.coordinator.destination_station,
+            "departures": self._departures,
+            "lookahead_hours": self.coordinator.lookahead_hours,
+            "route_filter": self.coordinator.destination_station,
+        }

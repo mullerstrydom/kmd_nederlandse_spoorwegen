@@ -7,9 +7,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from kmd_nederlandse_spoorwegen.coordinator import KmdNederlandseSpoorwegenCoordinator
 from kmd_nederlandse_spoorwegen.const import (
+    CONF_DESTINATION_STATION,
+    CONF_LOOKAHEAD_HOURS,
     CONF_MAX_DEPARTURES,
     CONF_STATION,
     CONF_SUBSCRIPTION_KEY,
+    DEFAULT_LOOKAHEAD_HOURS,
+    DEFAULT_MAX_DEPARTURES,
 )
 
 
@@ -22,7 +26,9 @@ class TestKmdNederlandseSpoorwegenCoordinator:
         entry.data = {
             CONF_SUBSCRIPTION_KEY: "test-key",
             CONF_STATION: "Utrecht Centraal",
+            CONF_DESTINATION_STATION: "Amsterdam Centraal",
             CONF_MAX_DEPARTURES: 7,
+            CONF_LOOKAHEAD_HOURS: 4,
         }
 
         with patch("kmd_nederlandse_spoorwegen.coordinator.DataUpdateCoordinator.__init__", return_value=None):
@@ -36,10 +42,15 @@ class TestKmdNederlandseSpoorwegenCoordinator:
                 result = asyncio.run(coordinator._async_update_data())
 
         assert result == {"station": "Utrecht Centraal", "departures": []}
-        mock_api.async_get_departures.assert_awaited_once_with("Utrecht Centraal", 7)
+        mock_api.async_get_departures.assert_awaited_once_with(
+            "Utrecht Centraal",
+            7,
+            destination_station="Amsterdam Centraal",
+            lookahead_hours=4,
+        )
 
     def test_coordinator_uses_default_max_departures(self):
-        """The coordinator should fall back to the default max departures value."""
+        """The coordinator should fall back to the default max departures and look-ahead value."""
         entry = MagicMock()
         entry.data = {
             CONF_SUBSCRIPTION_KEY: "test-key",
@@ -56,4 +67,9 @@ class TestKmdNederlandseSpoorwegenCoordinator:
                 coordinator = KmdNederlandseSpoorwegenCoordinator(MagicMock(), entry)
                 asyncio.run(coordinator._async_update_data())
 
-        mock_api.async_get_departures.assert_awaited_once_with("Amsterdam Centraal", 5)
+        mock_api.async_get_departures.assert_awaited_once_with(
+            "Amsterdam Centraal",
+            DEFAULT_MAX_DEPARTURES,
+            destination_station=None,
+            lookahead_hours=DEFAULT_LOOKAHEAD_HOURS,
+        )
