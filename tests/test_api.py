@@ -61,3 +61,33 @@ class TestKmdNederlandseSpoorwegenApiClient:
 
             with pytest.raises(KmdNederlandseSpoorwegenApiError, match="API unavailable"):
                 asyncio.run(client.async_get_departures("Utrecht Centraal", 5))
+
+    def test_async_get_departures_skips_malformed_entries(self):
+        """Malformed departure entries should be skipped instead of crashing the whole result."""
+        valid_departure = SimpleNamespace(
+            key="123_2026-10-22T08:15:00+00:00",
+            destination="Amsterdam Centraal",
+            departure_time_planned=datetime(2026, 10, 22, 8, 15, 0),
+            departure_time_actual=datetime(2026, 10, 22, 8, 18, 0),
+            departure_platform="3",
+            delay=3,
+            departure_status="on_time",
+            train_type="Intercity",
+            cancelled=False,
+        )
+
+        malformed_departure = {"destination": "Bad data"}
+
+        with patch("api.NSAPI") as mock_nsapi:
+            mock_nsapi.return_value.get_departures.return_value = [
+                valid_departure,
+                malformed_departure,
+                None,
+            ]
+            client = KmdNederlandseSpoorwegenApiClient("test-key")
+
+            result = asyncio.run(client.async_get_departures("Utrecht Centraal", 5))
+
+        assert len(result["departures"]) == 2
+        assert result["departures"][0]["destination"] == "Amsterdam Centraal"
+        assert result["departures"][1]["destination"] == "Bad data"
