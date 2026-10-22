@@ -7,7 +7,9 @@ from datetime import datetime
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from api import KmdNederlandseSpoorwegenApiClient
+import pytest
+
+from api import KmdNederlandseSpoorwegenApiClient, KmdNederlandseSpoorwegenApiError
 
 
 class TestKmdNederlandseSpoorwegenApiClient:
@@ -51,3 +53,11 @@ class TestKmdNederlandseSpoorwegenApiClient:
         assert result["station"] == "Utrecht Centraal"
         assert result["departures"] == []
 
+    def test_async_get_departures_raises_api_error_on_failure(self):
+        """A library failure should be wrapped in a custom API error."""
+        with patch("api.NSAPI") as mock_nsapi:
+            mock_nsapi.return_value.get_departures.side_effect = RuntimeError("API unavailable")
+            client = KmdNederlandseSpoorwegenApiClient("test-key")
+
+            with pytest.raises(KmdNederlandseSpoorwegenApiError, match="API unavailable"):
+                asyncio.run(client.async_get_departures("Utrecht Centraal", 5))

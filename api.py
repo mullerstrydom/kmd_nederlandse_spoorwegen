@@ -20,7 +20,15 @@ class KmdNederlandseSpoorwegenApiClient:
 
     async def async_get_departures(self, station: str, limit: int = 5) -> dict[str, Any]:
         """Fetch departure data for a station."""
-        departures = self._client.get_departures(station=station, max_journeys=str(limit))
+        try:
+            departures = self._client.get_departures(station=station, max_journeys=str(limit))
+        except Exception as err:  # pragma: no cover - defensive guard
+            raise KmdNederlandseSpoorwegenApiError(
+                f"Failed to fetch departures for station {station}: {err}"
+            ) from err
+
+        if departures is None:
+            return {"station": station, "departures": []}
 
         normalized = []
         for departure in departures:

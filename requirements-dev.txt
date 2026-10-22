@@ -1,0 +1,3 @@
+pytest==8.4.2
+homeassistant>=2024.10.0
+ns-api==0.0.1
