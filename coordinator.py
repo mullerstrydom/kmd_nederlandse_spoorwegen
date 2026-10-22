@@ -3,26 +3,35 @@
 from __future__ import annotations
 
 from datetime import timedelta
+import logging
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN
+from .api import KmdNederlandseSpoorwegenApiClient
+from .const import CONF_MAX_DEPARTURES, CONF_STATION, CONF_SUBSCRIPTION_KEY, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
-class KmdNederlandseSpoorwegenCoordinator(DataUpdateCoordinator):
+class KmdNederlandseSpoorwegenCoordinator(DataUpdateCoordinator[dict]):
     """Class to manage fetching data from the API."""
 
-    def __init__(self, hass: HomeAssistant, config_entry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         super().__init__(
             hass,
-            logger=__import__("logging").getLogger(__name__),
+            logger=_LOGGER,
             name=DOMAIN,
             update_interval=timedelta(minutes=5),
         )
         self.config_entry = config_entry
+        self.api = KmdNederlandseSpoorwegenApiClient(
+            config_entry.data[CONF_SUBSCRIPTION_KEY],
+        )
+        self.station = config_entry.data[CONF_STATION]
+        self.max_departures = config_entry.data.get(CONF_MAX_DEPARTURES, 5)
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict:
         """Fetch data from the API."""
-        return {}
-
+        return await self.api.async_get_departures(self.station, self.max_departures)

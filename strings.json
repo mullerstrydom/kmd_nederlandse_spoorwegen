@@ -2,13 +2,13 @@
   "config": {
     "step": {
       "user": {
-        "title": "Connect to KMd Nederlandse Spoorwegen",
+        "title": "Connect to NS API",
         "data": {
-          "username": "Username",
-          "password": "Password"
+          "subscription_key": "Subscription key",
+          "station": "Station",
+          "max_departures": "Max departures"
         }
       }
     }
   }
 }
-

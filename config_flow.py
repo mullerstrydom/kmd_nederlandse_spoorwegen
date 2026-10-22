@@ -5,7 +5,14 @@ from __future__ import annotations
 import voluptuous as vol
 from homeassistant import config_entries
 
-from .const import DOMAIN
+from .const import (
+    CONF_MAX_DEPARTURES,
+    CONF_STATION,
+    CONF_SUBSCRIPTION_KEY,
+    DEFAULT_MAX_DEPARTURES,
+    DEFAULT_STATION,
+    DOMAIN,
+)
 
 
 class KmdNederlandseSpoorwegenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -17,17 +24,21 @@ class KmdNederlandseSpoorwegenConfigFlow(config_entries.ConfigFlow, domain=DOMAI
         """Handle the initial step."""
         if user_input is not None:
             return self.async_create_entry(
-                title="KMd Nederlandse Spoorwegen",
-                data=user_input,
+                title=user_input[CONF_STATION],
+                data={
+                    CONF_SUBSCRIPTION_KEY: user_input[CONF_SUBSCRIPTION_KEY],
+                    CONF_STATION: user_input[CONF_STATION],
+                    CONF_MAX_DEPARTURES: user_input.get(CONF_MAX_DEPARTURES, DEFAULT_MAX_DEPARTURES),
+                },
             )
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required("username"): str,
-                    vol.Optional("password"): str,
+                    vol.Required(CONF_SUBSCRIPTION_KEY): str,
+                    vol.Required(CONF_STATION, default=DEFAULT_STATION): str,
+                    vol.Optional(CONF_MAX_DEPARTURES, default=DEFAULT_MAX_DEPARTURES): int,
                 }
             ),
         )
-

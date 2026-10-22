@@ -6,7 +6,6 @@
   "dependencies": [],
   "documentation": "https://github.com/your-user/kmd_nederlandse_spoorwegen",
   "iot_class": "cloud_polling",
-  "requirements": [],
+  "requirements": ["ns-api==0.0.1"],
   "version": "0.1.0"
 }
-
