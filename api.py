@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from datetime import datetime, timedelta
 from typing import Any
 
 from homeassistant.exceptions import HomeAssistantError
 from ns_api import NSAPI
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class KmdNederlandseSpoorwegenApiError(HomeAssistantError):
@@ -22,23 +25,33 @@ class KmdNederlandseSpoorwegenApiClient:
 
     async def _fetch_departures(self, station: str, limit: int) -> list[Any]:
         """Fetch raw departure data and wrap transport-level errors."""
+        _LOGGER.debug("Fetching departures for station=%s limit=%s", station, limit)
         try:
-            return await asyncio.to_thread(
+            result = await asyncio.to_thread(
                 self._client.get_departures,
                 station=station,
                 max_journeys=str(limit),
             )
+            _LOGGER.debug("Raw departures response for %s: %s", station, result)
+            return result
         except KeyError as err:  # pragma: no cover - defensive guard
             if err.args and err.args[0] == "payload":
+                _LOGGER.warning(
+                    "NS API returned a response without a 'payload' key for station %s; treating as empty result",
+                    station,
+                )
                 return []
+            _LOGGER.exception("Unhandled KeyError fetching departures for station %s", station)
             raise KmdNederlandseSpoorwegenApiError(
                 f"Failed to fetch departures for station {station}: {err}"
             ) from err
         except TypeError as err:  # pragma: no cover - defensive guard
+            _LOGGER.exception("TypeError fetching departures for station %s", station)
             raise KmdNederlandseSpoorwegenApiError(
                 f"TypeError while fetching departures for station {station}: {err}"
             ) from err
         except Exception as err:  # pragma: no cover - defensive guard
+            _LOGGER.exception("Unexpected exception fetching departures for station %s", station)
             raise KmdNederlandseSpoorwegenApiError(
                 f"Failed to fetch departures for station {station}: {err}"
             ) from err
