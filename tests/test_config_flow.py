@@ -24,6 +24,7 @@ class TestKmdNederlandseSpoorwegenConfigFlow:
     def test_user_step_creates_entry_with_valid_input(self):
         """Valid user input should create an entry with the expected data."""
         flow = KmdNederlandseSpoorwegenConfigFlow()
+        flow._subscription_key = "abc123"
         flow.async_create_entry = lambda title, data: {"title": title, "data": data}
 
         result = asyncio.run(flow.async_step_user({
@@ -54,17 +55,4 @@ class TestKmdNederlandseSpoorwegenConfigFlow:
         required = [key.schema for key in schema_keys if hasattr(key, "schema")]
 
         assert CONF_SUBSCRIPTION_KEY in required
-        assert CONF_STATION in required
-        assert CONF_DESTINATION_STATION in required
-        assert CONF_MAX_DEPARTURES in required
-        assert CONF_LOOKAHEAD_HOURS in required
-
-        station_key = next(key for key in schema_keys if getattr(key, "schema", None) == CONF_STATION)
-        dest_key = next(key for key in schema_keys if getattr(key, "schema", None) == CONF_DESTINATION_STATION)
-        max_key = next(key for key in schema_keys if getattr(key, "schema", None) == CONF_MAX_DEPARTURES)
-        lookahead_key = next(key for key in schema_keys if getattr(key, "schema", None) == CONF_LOOKAHEAD_HOURS)
-
-        assert station_key.default() == DEFAULT_STATION
-        assert dest_key.default() == DEFAULT_DESTINATION_STATION
-        assert max_key.default() == DEFAULT_MAX_DEPARTURES
-        assert lookahead_key.default() == DEFAULT_LOOKAHEAD_HOURS
+        assert len(required) == 1
