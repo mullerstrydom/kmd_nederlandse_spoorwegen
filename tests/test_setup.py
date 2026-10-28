@@ -7,8 +7,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from kmd_nederlandse_spoorwegen import async_setup_entry, async_unload_entry
 from kmd_nederlandse_spoorwegen.const import (
+    CONF_DESTINATION_STATION,
+    CONF_DESTINATION_STATION_CODE,
     CONF_MAX_DEPARTURES,
     CONF_STATION,
+    CONF_STATION_CODE,
     CONF_SUBSCRIPTION_KEY,
     DOMAIN,
 )
@@ -26,9 +29,13 @@ class TestSetupSmoke:
 
         entry = MagicMock()
         entry.entry_id = "test-entry"
+        entry.version = 2
         entry.data = {
             CONF_SUBSCRIPTION_KEY: "abc123",
             CONF_STATION: "Utrecht Centraal",
+            CONF_STATION_CODE: "UT",
+            CONF_DESTINATION_STATION: "Amsterdam Centraal",
+            CONF_DESTINATION_STATION_CODE: "ASD",
             CONF_MAX_DEPARTURES: 5,
         }
 
@@ -43,6 +50,36 @@ class TestSetupSmoke:
         coordinator.async_config_entry_first_refresh.assert_awaited_once()
         assert hass.data[DOMAIN][entry.entry_id] is coordinator
         hass.config_entries.async_forward_entry_setups.assert_awaited_once_with(entry, ["sensor"])
+
+    def test_async_setup_entry_migrates_legacy_station_name_config(self):
+        """Old entries with station names only should be upgraded with station codes."""
+        hass = MagicMock()
+        hass.data = {}
+        hass.config_entries = MagicMock()
+        hass.config_entries.async_forward_entry_setups = AsyncMock()
+        hass.config_entries.async_update_entry = MagicMock()
+        hass.async_add_executor_job = AsyncMock(return_value={"Utrecht Centraal": "UT", "Amsterdam Centraal": "ASD"})
+
+        entry = MagicMock()
+        entry.entry_id = "legacy-entry"
+        entry.version = 1
+        entry.data = {
+            CONF_SUBSCRIPTION_KEY: "abc123",
+            CONF_STATION: "Utrecht Centraal",
+            CONF_DESTINATION_STATION: "Amsterdam Centraal",
+        }
+
+        coordinator = MagicMock()
+        coordinator.async_config_entry_first_refresh = AsyncMock()
+
+        with patch("kmd_nederlandse_spoorwegen.KmdNederlandseSpoorwegenCoordinator", return_value=coordinator):
+            result = asyncio.run(async_setup_entry(hass, entry))
+
+        assert result is True
+        hass.config_entries.async_update_entry.assert_called_once()
+        updated_data = hass.config_entries.async_update_entry.call_args.kwargs["data"]
+        assert updated_data[CONF_STATION_CODE] == "UT"
+        assert updated_data[CONF_DESTINATION_STATION_CODE] == "ASD"
 
     def test_async_unload_entry_removes_coordinator_and_unloads_platforms(self):
         """Unloading should clear the coordinator data and unload the sensor platform."""
@@ -59,4 +96,3 @@ class TestSetupSmoke:
         assert result is True
         hass.config_entries.async_unload_platforms.assert_awaited_once_with(entry, ["sensor"])
         assert hass.data[DOMAIN] == {}
-

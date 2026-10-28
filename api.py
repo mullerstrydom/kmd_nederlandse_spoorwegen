@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from homeassistant.exceptions import HomeAssistantError
@@ -72,7 +72,7 @@ class KmdNederlandseSpoorwegenApiClient:
         if not isinstance(departures, list):
             return {"station": station, "departures": []}
 
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         cutoff = now + timedelta(hours=lookahead_hours)
 
         normalized = []
@@ -82,10 +82,21 @@ class KmdNederlandseSpoorwegenApiClient:
 
             departure_time = self._safe_get(departure, "departure_time_planned")
             if departure_time is not None:
-                if departure_time < now:
-                    continue
-                if departure_time > cutoff:
-                    continue
+                if isinstance(departure_time, str):
+                    try:
+                        departure_time = datetime.fromisoformat(departure_time.replace("Z", "+00:00"))
+                    except ValueError:
+                        departure_time = None
+                elif not hasattr(departure_time, "tzinfo") or departure_time.tzinfo is None:
+                    departure_time = departure_time.replace(tzinfo=timezone.utc)
+                else:
+                    departure_time = departure_time.astimezone(timezone.utc)
+
+                if departure_time is not None:
+                    if departure_time < now:
+                        continue
+                    if departure_time > cutoff:
+                        continue
 
             destination = self._safe_get(departure, "destination")
             if destination_station and destination_station.lower() not in str(destination).lower():
