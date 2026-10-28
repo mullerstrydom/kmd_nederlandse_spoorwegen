@@ -21,13 +21,19 @@ class KmdNederlandseSpoorwegenApiClient:
         self._client = NSAPI(subscription_key)
 
     async def _fetch_departures(self, station: str, limit: int) -> list[Any]:
-        """Fetch raw departure data and wrap transport-level TypeError exceptions."""
+        """Fetch raw departure data and wrap transport-level errors."""
         try:
             return await asyncio.to_thread(
                 self._client.get_departures,
                 station=station,
                 max_journeys=str(limit),
             )
+        except KeyError as err:  # pragma: no cover - defensive guard
+            if err.args and err.args[0] == "payload":
+                return []
+            raise KmdNederlandseSpoorwegenApiError(
+                f"Failed to fetch departures for station {station}: {err}"
+            ) from err
         except TypeError as err:  # pragma: no cover - defensive guard
             raise KmdNederlandseSpoorwegenApiError(
                 f"TypeError while fetching departures for station {station}: {err}"

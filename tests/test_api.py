@@ -99,3 +99,25 @@ class TestKmdNederlandseSpoorwegenApiClient:
         assert len(result["departures"]) == 2
         assert result["departures"][0]["destination"] == "Amsterdam Centraal"
         assert result["departures"][1]["destination"] == "Bad data"
+
+    def test_async_get_departures_raises_type_error_for_transport_failure(self):
+        """A TypeError from the underlying transport should be surfaced as the custom API error."""
+        with patch("api.NSAPI") as mock_nsapi:
+            mock_nsapi.return_value.get_departures.side_effect = TypeError(
+                "the JSON object must be str, bytes or bytearray, not NoneType"
+            )
+            client = KmdNederlandseSpoorwegenApiClient("test-key")
+
+            with pytest.raises(KmdNederlandseSpoorwegenApiError, match="TypeError while fetching departures"):
+                asyncio.run(client.async_get_departures("Utrecht Centraal", 5))
+
+    def test_async_get_departures_handles_missing_payload(self):
+        """A missing payload in the NS response should be treated as an empty result."""
+        with patch("api.NSAPI") as mock_nsapi:
+            mock_nsapi.return_value.get_departures.side_effect = KeyError("payload")
+            client = KmdNederlandseSpoorwegenApiClient("test-key")
+
+            result = asyncio.run(client.async_get_departures("Maarssen", 5))
+
+        assert result["station"] == "Maarssen"
+        assert result["departures"] == []
