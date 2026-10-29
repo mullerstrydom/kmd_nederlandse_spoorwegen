@@ -1,6 +1,7 @@
 {
   "name": "KMd Nederlandse Spoorwegen",
   "content_in_root": false,
-  "filename": "custom_components/kmd_nederlandse_spoorwegen"
+  "filename": "custom_components/kmd_nederlandse_spoorwegen",
+  "homeassistant": "2024.10.0",
+  "render_readme": true
 }
-
