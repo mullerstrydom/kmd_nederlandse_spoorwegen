@@ -51,12 +51,16 @@ class NextDepartureSensor(RouteDepartureSensorBase):
 
     def __init__(self, coordinator: KmdNederlandseSpoorwegenCoordinator) -> None:
         super().__init__(coordinator)
-        route_suffix = f"_{coordinator.destination_station}" if coordinator.destination_station else ""
+        route_suffix = (
+            f"_{coordinator.destination_station_name or coordinator.destination_station}"
+            if coordinator.destination_station
+            else ""
+        )
         self._attr_unique_id = f"{coordinator.station}{route_suffix}_next_departure"
         self._attr_name = (
-            f"{coordinator.station} → {coordinator.destination_station} next departure"
-            if coordinator.destination_station
-            else f"{coordinator.station} next departure"
+            f"{coordinator.station_name} → {coordinator.destination_station_name} next departure"
+            if coordinator.destination_station_name
+            else f"{coordinator.station_name} next departure"
         )
 
     @property
@@ -93,12 +97,16 @@ class UpcomingDeparturesSensor(RouteDepartureSensorBase):
 
     def __init__(self, coordinator: KmdNederlandseSpoorwegenCoordinator) -> None:
         super().__init__(coordinator)
-        route_suffix = f"_{coordinator.destination_station}" if coordinator.destination_station else ""
+        route_suffix = (
+            f"_{coordinator.destination_station_name or coordinator.destination_station}"
+            if coordinator.destination_station
+            else ""
+        )
         self._attr_unique_id = f"{coordinator.station}{route_suffix}_upcoming_departures"
         self._attr_name = (
-            f"{coordinator.station} → {coordinator.destination_station} departures"
-            if coordinator.destination_station
-            else f"{coordinator.station} departures"
+            f"{coordinator.station_name} → {coordinator.destination_station_name} departures"
+            if coordinator.destination_station_name
+            else f"{coordinator.station_name} departures"
         )
 
     @property

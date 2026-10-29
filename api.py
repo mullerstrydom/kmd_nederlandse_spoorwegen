@@ -66,10 +66,7 @@ class KmdNederlandseSpoorwegenApiClient:
         """Fetch departure data for a station, optionally filtered by destination and time window."""
         departures = await self._fetch_departures(station, limit)
 
-        if not departures:
-            return {"station": station, "departures": []}
-
-        if not isinstance(departures, list):
+        if not departures or not isinstance(departures, list):
             return {"station": station, "departures": []}
 
         now = datetime.now(timezone.utc)
@@ -77,48 +74,89 @@ class KmdNederlandseSpoorwegenApiClient:
 
         normalized = []
         for departure in departures:
-            if departure is None:
-                continue
-
-            departure_time = self._safe_get(departure, "departure_time_planned")
-            if departure_time is not None:
-                if isinstance(departure_time, str):
-                    try:
-                        departure_time = datetime.fromisoformat(departure_time.replace("Z", "+00:00"))
-                    except ValueError:
-                        departure_time = None
-                elif not hasattr(departure_time, "tzinfo") or departure_time.tzinfo is None:
-                    departure_time = departure_time.replace(tzinfo=timezone.utc)
-                else:
-                    departure_time = departure_time.astimezone(timezone.utc)
-
-                if departure_time is not None:
-                    if departure_time < now:
-                        continue
-                    if departure_time > cutoff:
-                        continue
-
-            destination = self._safe_get(departure, "destination")
-            if destination and destination_station and destination_station.lower() not in str(destination).lower():
-                continue
-
-            normalized.append(
-                {
-                    "key": self._safe_get(departure, "key"),
-                    "route": destination,
-                    "destination": destination,
-                    "departure_time": departure_time,
-                    "direction": self._safe_get(departure, "direction"),
-                    "actual_departure_time": self._safe_get(departure, "departure_time_actual"),
-                    "platform": self._safe_get(departure, "departure_platform"),
-                    "delay": self._safe_get(departure, "delay", 0),
-                    "status": self._safe_get(departure, "departure_status", "unknown"),
-                    "train": self._safe_get(departure, "train_type"),
-                    "cancelled": self._safe_get(departure, "cancelled", False),
-                }
+            normalized_departure = self._normalize_departure(
+                departure,
+                now=now,
+                cutoff=cutoff,
+                destination_station=destination_station,
             )
+            if normalized_departure is not None:
+                normalized.append(normalized_departure)
 
         return {"station": station, "destination_station": destination_station, "departures": normalized}
+
+    def _normalize_departure(
+        self,
+        departure: Any,
+        *,
+        now: datetime,
+        cutoff: datetime,
+        destination_station: str | None,
+    ) -> dict[str, Any] | None:
+        """Convert a raw departure payload into a compact, Home Assistant-friendly dictionary."""
+        if departure is None:
+            return None
+
+        departure_time = self._first_present(departure, "plannedDateTime", "departure_time_planned")
+        actual_departure_time = self._first_present(departure, "actualDateTime", "departure_time_actual")
+        planned_track = self._first_present(departure, "plannedTrack", "departure_platform")
+        actual_track = self._first_present(departure, "actualTrack", "departure_platform")
+        product = self._safe_get(departure, "product", {}) or {}
+        route_stations = self._safe_get(departure, "routeStations", []) or []
+        destination = self._first_present(departure, "direction", "destination")
+
+        if destination is None and route_stations and isinstance(route_stations[-1], dict):
+            destination = route_stations[-1].get("mediumName")
+
+        departure_time = self._normalize_datetime(departure_time)
+        actual_departure_time = self._normalize_datetime(actual_departure_time)
+
+        if departure_time is not None:
+            if departure_time < now or departure_time > cutoff:
+                return None
+
+        # if destination_station and destination_station.lower() not in str(destination or "").lower():
+        #     return None
+
+        return {
+            "key": self._safe_get(departure, "name") or self._safe_get(departure, "key"),
+            "route": destination,
+            "destination": destination,
+            "direction": self._safe_get(departure, "direction") or destination,
+            "departure_time": departure_time,
+            "actual_departure_time": actual_departure_time,
+            "planned_departure_time": departure_time,
+            "platform": actual_track or planned_track or self._safe_get(departure, "departure_platform"),
+            "planned_platform": planned_track or self._safe_get(departure, "departure_platform"),
+            "actual_platform": actual_track or self._safe_get(departure, "departure_platform"),
+            "delay": self._safe_get(departure, "delay", 0),
+            "status": self._safe_get(departure, "departureStatus")
+            or self._safe_get(departure, "departure_status", "unknown"),
+            "train": (
+                product.get("shortCategoryName")
+                or product.get("longCategoryName")
+                or self._safe_get(departure, "train_type")
+                or self._safe_get(departure, "trainCategory")
+            ),
+            "train_number": product.get("number"),
+            "train_category": product.get("categoryCode") or self._safe_get(departure, "trainCategory"),
+            "cancelled": self._safe_get(departure, "cancelled", False),
+            "route_stations": route_stations,
+            "messages": self._safe_get(departure, "messages", []),
+            "product": product,
+            "planned_track": planned_track,
+            "actual_track": actual_track,
+            "name": self._safe_get(departure, "name"),
+        }
+
+    @staticmethod
+    def _first_present(value: Any, *keys: str) -> Any:
+        """Return the first non-None field from a list of candidate keys."""
+        for key in keys:
+            candidate = value.get(key) if isinstance(value, dict) else getattr(value, key, None)
+            if candidate is not None:
+                return candidate
+        return None
 
     @staticmethod
     def _safe_get(value: Any, attr: str, default: Any = None) -> Any:
@@ -130,3 +168,22 @@ class KmdNederlandseSpoorwegenApiClient:
             return value.get(attr, default)
 
         return getattr(value, attr, default)
+
+
+    @staticmethod
+    def _normalize_datetime(value: Any) -> datetime | None:
+        """Normalize an ISO-8601 string or datetime object to a timezone-aware UTC datetime."""
+        if value is None:
+            return None
+
+        if isinstance(value, str):
+            try:
+                value = datetime.fromisoformat(value.replace("Z", "+00:00"))
+            except ValueError:
+                return None
+
+        if value.tzinfo is None:
+            return value.replace(tzinfo=timezone.utc)
+
+        return value.astimezone(timezone.utc)
+

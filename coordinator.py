@@ -41,10 +41,15 @@ class KmdNederlandseSpoorwegenCoordinator(DataUpdateCoordinator[dict]):
             config_entry.data[CONF_SUBSCRIPTION_KEY],
         )
         self.station = config_entry.data.get(CONF_STATION_CODE, config_entry.data[CONF_STATION])
-        self.destination_station = config_entry.data.get(CONF_DESTINATION_STATION)
+        self.station_name = config_entry.data.get(CONF_STATION, self.station)
         self.destination_station_code = config_entry.data.get(
             CONF_DESTINATION_STATION_CODE,
             config_entry.data.get(CONF_DESTINATION_STATION),
+        )
+        self.destination_station = self.destination_station_code
+        self.destination_station_name = config_entry.data.get(
+            CONF_DESTINATION_STATION,
+            self.destination_station_code,
         )
         self.max_departures = config_entry.data.get(CONF_MAX_DEPARTURES, DEFAULT_MAX_DEPARTURES)
         self.lookahead_hours = config_entry.data.get(CONF_LOOKAHEAD_HOURS, DEFAULT_LOOKAHEAD_HOURS)
