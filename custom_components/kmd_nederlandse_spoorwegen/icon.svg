@@ -1,0 +1,35 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="72" y1="64" x2="440" y2="448" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0B4A8D"/>
+      <stop offset="1" stop-color="#0F5FB5"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="122" y1="104" x2="384" y2="392" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F7C948"/>
+      <stop offset="1" stop-color="#FFDF7A"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+
+  <circle cx="256" cy="256" r="180" fill="rgba(255,255,255,0.08)"/>
+  <circle cx="256" cy="256" r="152" stroke="rgba(255,255,255,0.25)" stroke-width="2"/>
+
+  <path d="M154 322L232 180H282L354 322" stroke="url(#accent)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M168 328H344" stroke="rgba(255,255,255,0.75)" stroke-width="12" stroke-linecap="round"/>
+
+  <rect x="176" y="148" width="160" height="118" rx="22" fill="white"/>
+  <rect x="190" y="164" width="132" height="20" rx="10" fill="#EAF3FF"/>
+  <circle cx="210" cy="236" r="12" fill="#0B4A8D"/>
+  <circle cx="302" cy="236" r="12" fill="#0B4A8D"/>
+  <rect x="216" y="202" width="80" height="18" rx="9" fill="#DADFEA"/>
+
+  <path d="M116 358C148 335 188 322 228 322H284C324 322 364 335 396 358" stroke="white" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="128" cy="364" r="12" fill="#F7C948"/>
+  <circle cx="384" cy="364" r="12" fill="#F7C948"/>
+
+  <path d="M222 98L256 72L290 98" stroke="#F7C948" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M256 72V108" stroke="#F7C948" stroke-width="12" stroke-linecap="round"/>
+
+  <text x="392" y="454" text-anchor="end" font-size="42" font-family="Arial, Helvetica, sans-serif" font-weight="700" letter-spacing="1.5" fill="#F7C948">KMd</text>
+</svg>
