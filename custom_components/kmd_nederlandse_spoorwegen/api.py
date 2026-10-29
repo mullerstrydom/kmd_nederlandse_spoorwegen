@@ -64,12 +64,12 @@ class KmdNederlandseSpoorwegenApiClient:
         lookahead_hours: int = 3,
     ) -> dict[str, Any]:
         """Fetch departure data for a station, optionally filtered by destination and time window."""
+        now = datetime.now(timezone.utc)
         departures = await self._fetch_departures(station, limit)
 
         if not departures or not isinstance(departures, list):
-            return {"station": station, "departures": []}
+            return {"station": station, "departures": [], "last_updated": now}
 
-        now = datetime.now(timezone.utc)
         cutoff = now + timedelta(hours=lookahead_hours)
 
         normalized = []
@@ -83,7 +83,12 @@ class KmdNederlandseSpoorwegenApiClient:
             if normalized_departure is not None:
                 normalized.append(normalized_departure)
 
-        return {"station": station, "destination_station": destination_station, "departures": normalized}
+        return {
+            "station": station,
+            "destination_station": destination_station,
+            "departures": normalized,
+            "last_updated": now,
+        }
 
     def _normalize_departure(
         self,

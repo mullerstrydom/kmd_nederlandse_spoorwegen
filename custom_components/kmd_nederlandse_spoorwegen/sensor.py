@@ -89,6 +89,7 @@ class NextDepartureSensor(RouteDepartureSensorBase):
             "status": next_departure.get("status"),
             "lookahead_hours": self.coordinator.lookahead_hours,
             "route_filter": self.coordinator.destination_station,
+            "last_updated": self.coordinator.data.get("last_updated"),
         }
 
 
@@ -123,4 +124,5 @@ class UpcomingDeparturesSensor(RouteDepartureSensorBase):
             "departures": self._departures,
             "lookahead_hours": self.coordinator.lookahead_hours,
             "route_filter": self.coordinator.destination_station,
+            "last_updated": self.coordinator.data.get("last_updated"),
         }
