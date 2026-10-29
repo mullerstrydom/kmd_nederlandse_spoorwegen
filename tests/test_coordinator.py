@@ -5,8 +5,8 @@ from __future__ import annotations
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from kmd_nederlandse_spoorwegen.coordinator import KmdNederlandseSpoorwegenCoordinator
-from kmd_nederlandse_spoorwegen.const import (
+from custom_components.kmd_nederlandse_spoorwegen.coordinator import KmdNederlandseSpoorwegenCoordinator
+from custom_components.kmd_nederlandse_spoorwegen.const import (
     CONF_DESTINATION_STATION,
     CONF_LOOKAHEAD_HOURS,
     CONF_MAX_DEPARTURES,
@@ -31,8 +31,8 @@ class TestKmdNederlandseSpoorwegenCoordinator:
             CONF_LOOKAHEAD_HOURS: 4,
         }
 
-        with patch("kmd_nederlandse_spoorwegen.coordinator.DataUpdateCoordinator.__init__", return_value=None):
-            with patch("kmd_nederlandse_spoorwegen.coordinator.KmdNederlandseSpoorwegenApiClient") as mock_api_cls:
+        with patch("custom_components.kmd_nederlandse_spoorwegen.coordinator.DataUpdateCoordinator.__init__", return_value=None):
+            with patch("custom_components.kmd_nederlandse_spoorwegen.coordinator.KmdNederlandseSpoorwegenApiClient") as mock_api_cls:
                 mock_api = mock_api_cls.return_value
                 mock_api.async_get_departures = AsyncMock(
                     return_value={"station": "Utrecht Centraal", "departures": []}
@@ -57,8 +57,8 @@ class TestKmdNederlandseSpoorwegenCoordinator:
             CONF_STATION: "Amsterdam Centraal",
         }
 
-        with patch("kmd_nederlandse_spoorwegen.coordinator.DataUpdateCoordinator.__init__", return_value=None):
-            with patch("kmd_nederlandse_spoorwegen.coordinator.KmdNederlandseSpoorwegenApiClient") as mock_api_cls:
+        with patch("custom_components.kmd_nederlandse_spoorwegen.coordinator.DataUpdateCoordinator.__init__", return_value=None):
+            with patch("custom_components.kmd_nederlandse_spoorwegen.coordinator.KmdNederlandseSpoorwegenApiClient") as mock_api_cls:
                 mock_api = mock_api_cls.return_value
                 mock_api.async_get_departures = AsyncMock(
                     return_value={"station": "Amsterdam Centraal", "departures": []}

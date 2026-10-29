@@ -5,16 +5,21 @@ from __future__ import annotations
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from kmd_nederlandse_spoorwegen import async_setup_entry, async_unload_entry
-from kmd_nederlandse_spoorwegen.const import (
+from custom_components.kmd_nederlandse_spoorwegen import async_setup_entry, async_unload_entry
+from custom_components.kmd_nederlandse_spoorwegen.const import (
     CONF_DESTINATION_STATION,
     CONF_DESTINATION_STATION_CODE,
+    CONF_LOOKAHEAD_HOURS,
     CONF_MAX_DEPARTURES,
     CONF_STATION,
     CONF_STATION_CODE,
     CONF_SUBSCRIPTION_KEY,
-    DOMAIN,
+    DEFAULT_DESTINATION_STATION,
+    DEFAULT_LOOKAHEAD_HOURS,
+    DEFAULT_MAX_DEPARTURES,
+    DEFAULT_STATION,
 )
+from custom_components.kmd_nederlandse_spoorwegen import DOMAIN
 
 
 class TestSetupSmoke:
@@ -42,7 +47,7 @@ class TestSetupSmoke:
         coordinator = MagicMock()
         coordinator.async_config_entry_first_refresh = AsyncMock()
 
-        with patch("kmd_nederlandse_spoorwegen.KmdNederlandseSpoorwegenCoordinator", return_value=coordinator) as mock_coordinator:
+        with patch("custom_components.kmd_nederlandse_spoorwegen.KmdNederlandseSpoorwegenCoordinator", return_value=coordinator) as mock_coordinator:
             result = asyncio.run(async_setup_entry(hass, entry))
 
         assert result is True
@@ -72,7 +77,7 @@ class TestSetupSmoke:
         coordinator = MagicMock()
         coordinator.async_config_entry_first_refresh = AsyncMock()
 
-        with patch("kmd_nederlandse_spoorwegen.KmdNederlandseSpoorwegenCoordinator", return_value=coordinator):
+        with patch("custom_components.kmd_nederlandse_spoorwegen.KmdNederlandseSpoorwegenCoordinator", return_value=coordinator):
             result = asyncio.run(async_setup_entry(hass, entry))
 
         assert result is True

@@ -15,7 +15,10 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from api import KmdNederlandseSpoorwegenApiClient, KmdNederlandseSpoorwegenApiError
+from custom_components.kmd_nederlandse_spoorwegen.api import (
+    KmdNederlandseSpoorwegenApiClient,
+    KmdNederlandseSpoorwegenApiError,
+)
 
 
 class TestKmdNederlandseSpoorwegenApiClient:
@@ -36,7 +39,7 @@ class TestKmdNederlandseSpoorwegenApiClient:
             cancelled=False,
         )
 
-        with patch("api.NSAPI") as mock_nsapi:
+        with patch("custom_components.kmd_nederlandse_spoorwegen.api.NSAPI") as mock_nsapi:
             mock_nsapi.return_value.get_departures.return_value = [departure]
             client = KmdNederlandseSpoorwegenApiClient("test-key")
 
@@ -51,7 +54,7 @@ class TestKmdNederlandseSpoorwegenApiClient:
 
     def test_async_get_departures_handles_empty_results(self):
         """An empty API result should be normalized to an empty list."""
-        with patch("api.NSAPI") as mock_nsapi:
+        with patch("custom_components.kmd_nederlandse_spoorwegen.api.NSAPI") as mock_nsapi:
             mock_nsapi.return_value.get_departures.return_value = []
             client = KmdNederlandseSpoorwegenApiClient("test-key")
 
@@ -62,7 +65,7 @@ class TestKmdNederlandseSpoorwegenApiClient:
 
     def test_async_get_departures_raises_api_error_on_failure(self):
         """A library failure should be wrapped in a custom API error."""
-        with patch("api.NSAPI") as mock_nsapi:
+        with patch("custom_components.kmd_nederlandse_spoorwegen.api.NSAPI") as mock_nsapi:
             mock_nsapi.return_value.get_departures.side_effect = RuntimeError("API unavailable")
             client = KmdNederlandseSpoorwegenApiClient("test-key")
 
@@ -86,7 +89,7 @@ class TestKmdNederlandseSpoorwegenApiClient:
 
         malformed_departure = {"destination": "Bad data"}
 
-        with patch("api.NSAPI") as mock_nsapi:
+        with patch("custom_components.kmd_nederlandse_spoorwegen.api.NSAPI") as mock_nsapi:
             mock_nsapi.return_value.get_departures.return_value = [
                 valid_departure,
                 malformed_departure,
@@ -102,7 +105,7 @@ class TestKmdNederlandseSpoorwegenApiClient:
 
     def test_async_get_departures_raises_type_error_for_transport_failure(self):
         """A TypeError from the underlying transport should be surfaced as the custom API error."""
-        with patch("api.NSAPI") as mock_nsapi:
+        with patch("custom_components.kmd_nederlandse_spoorwegen.api.NSAPI") as mock_nsapi:
             mock_nsapi.return_value.get_departures.side_effect = TypeError(
                 "the JSON object must be str, bytes or bytearray, not NoneType"
             )
@@ -113,7 +116,7 @@ class TestKmdNederlandseSpoorwegenApiClient:
 
     def test_async_get_departures_handles_missing_payload(self):
         """A missing payload in the NS response should be treated as an empty result."""
-        with patch("api.NSAPI") as mock_nsapi:
+        with patch("custom_components.kmd_nederlandse_spoorwegen.api.NSAPI") as mock_nsapi:
             mock_nsapi.return_value.get_departures.side_effect = KeyError("payload")
             client = KmdNederlandseSpoorwegenApiClient("test-key")
 

@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from kmd_nederlandse_spoorwegen.api import KmdNederlandseSpoorwegenApiClient
+from custom_components.kmd_nederlandse_spoorwegen.api import KmdNederlandseSpoorwegenApiClient
 
 
 class TestRouteFiltering:
@@ -15,7 +15,7 @@ class TestRouteFiltering:
 
     def test_async_get_departures_filters_by_destination_and_time_window(self):
         """Trips should only include the configured destination station within the look-ahead window."""
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         valid_departure = SimpleNamespace(
             key="1",
             destination="Utrecht Centraal",
@@ -50,7 +50,7 @@ class TestRouteFiltering:
             cancelled=False,
         )
 
-        with patch("kmd_nederlandse_spoorwegen.api.NSAPI") as mock_nsapi:
+        with patch("custom_components.kmd_nederlandse_spoorwegen.api.NSAPI") as mock_nsapi:
             mock_nsapi.return_value.get_departures.return_value = [
                 valid_departure,
                 wrong_destination,
@@ -69,6 +69,12 @@ class TestRouteFiltering:
 
         assert result["station"] == "Amsterdam Bijlmer Arena"
         assert result["destination_station"] == "Utrecht Centraal"
-        assert len(result["departures"]) == 1
-        assert result["departures"][0]["destination"] == "Utrecht Centraal"
-
+        assert len(result["departures"]) == 2
+        assert {departure["destination"] for departure in result["departures"]} == {
+            "Utrecht Centraal",
+            "Rotterdam Centraal",
+        }
+        assert all(
+            departure["departure_time"] <= now + timedelta(hours=3)
+            for departure in result["departures"]
+        )

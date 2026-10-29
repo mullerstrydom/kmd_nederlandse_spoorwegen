@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import asyncio
 
-from kmd_nederlandse_spoorwegen.config_flow import KmdNederlandseSpoorwegenConfigFlow
-from kmd_nederlandse_spoorwegen.const import (
+from custom_components.kmd_nederlandse_spoorwegen.config_flow import KmdNederlandseSpoorwegenConfigFlow
+from custom_components.kmd_nederlandse_spoorwegen.const import (
     CONF_DESTINATION_STATION,
     CONF_LOOKAHEAD_HOURS,
     CONF_MAX_DEPARTURES,
