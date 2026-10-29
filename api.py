@@ -99,7 +99,7 @@ class KmdNederlandseSpoorwegenApiClient:
                         continue
 
             destination = self._safe_get(departure, "destination")
-            if destination_station and destination_station.lower() not in str(destination).lower():
+            if destination and destination_station and destination_station.lower() not in str(destination).lower():
                 continue
 
             normalized.append(
@@ -108,6 +108,7 @@ class KmdNederlandseSpoorwegenApiClient:
                     "route": destination,
                     "destination": destination,
                     "departure_time": departure_time,
+                    "direction": self._safe_get(departure, "direction"),
                     "actual_departure_time": self._safe_get(departure, "departure_time_actual"),
                     "platform": self._safe_get(departure, "departure_platform"),
                     "delay": self._safe_get(departure, "delay", 0),
