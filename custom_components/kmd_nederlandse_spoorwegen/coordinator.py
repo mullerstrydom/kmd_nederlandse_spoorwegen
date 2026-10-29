@@ -18,8 +18,10 @@ from .const import (
     CONF_STATION,
     CONF_STATION_CODE,
     CONF_SUBSCRIPTION_KEY,
+    CONF_UPDATE_INTERVAL,
     DEFAULT_LOOKAHEAD_HOURS,
     DEFAULT_MAX_DEPARTURES,
+    DEFAULT_UPDATE_INTERVAL,
     DOMAIN,
 )
 
@@ -30,11 +32,12 @@ class KmdNederlandseSpoorwegenCoordinator(DataUpdateCoordinator[dict]):
     """Class to manage fetching data from the API."""
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+        update_interval_minutes = config_entry.data.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL)
         super().__init__(
             hass,
             logger=_LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(minutes=5),
+            update_interval=timedelta(minutes=update_interval_minutes),
         )
         self.config_entry = config_entry
         self.api = KmdNederlandseSpoorwegenApiClient(

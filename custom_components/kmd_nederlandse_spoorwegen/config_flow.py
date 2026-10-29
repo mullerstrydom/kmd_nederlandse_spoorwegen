@@ -16,10 +16,12 @@ from .const import (
     CONF_STATION,
     CONF_STATION_CODE,
     CONF_SUBSCRIPTION_KEY,
+    CONF_UPDATE_INTERVAL,
     DEFAULT_DESTINATION_STATION,
     DEFAULT_LOOKAHEAD_HOURS,
     DEFAULT_MAX_DEPARTURES,
     DEFAULT_STATION,
+    DEFAULT_UPDATE_INTERVAL,
     DOMAIN,
 )
 
@@ -105,6 +107,8 @@ class KmdNederlandseSpoorwegenConfigFlow(config_entries.ConfigFlow, domain=DOMAI
                     CONF_LOOKAHEAD_HOURS,
                     DEFAULT_LOOKAHEAD_HOURS,
                 ),
+                CONF_UPDATE_INTERVAL: user_input.get(
+                    CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL),
             },
         )
 
@@ -138,6 +142,8 @@ class KmdNederlandseSpoorwegenConfigFlow(config_entries.ConfigFlow, domain=DOMAI
                     CONF_LOOKAHEAD_HOURS,
                     DEFAULT_LOOKAHEAD_HOURS,
                 ),
+                CONF_UPDATE_INTERVAL: user_input.get(
+                    CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL),
             },
         )
 
@@ -159,6 +165,7 @@ class KmdNederlandseSpoorwegenConfigFlow(config_entries.ConfigFlow, domain=DOMAI
                     vol.Required(CONF_DESTINATION_STATION, default=default_destination): vol.In(station_options),
                     vol.Optional(CONF_MAX_DEPARTURES, default=DEFAULT_MAX_DEPARTURES): int,
                     vol.Optional(CONF_LOOKAHEAD_HOURS, default=DEFAULT_LOOKAHEAD_HOURS): int,
+                    vol.Optional(CONF_UPDATE_INTERVAL, default=DEFAULT_UPDATE_INTERVAL): int,
                 }
             ),
         )
